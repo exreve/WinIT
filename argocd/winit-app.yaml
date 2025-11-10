@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: winit
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/YOUR_USERNAME/WinIT.git  # Update with your repo
+    targetRevision: main
+    path: k8s
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: winit
+  
+  syncPolicy:
+    automated:
+      prune: true       # Automatically delete resources removed from Git
+      selfHeal: true    # Automatically sync when cluster state differs from Git
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Ignore certain fields that change frequently
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+

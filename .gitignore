@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env*.local
+.env.production
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+.cache/
+
+# Kubernetes secrets (never commit real secrets!)
+k8s/secrets/*.yaml
+!k8s/secrets/*.template.yaml
+!k8s/secrets/*.template
+!k8s/secrets/.gitkeep
+
+# Secret files and credentials
+**/secrets/
+**/*secret*.yaml
+**/*secret*.yml
+**/*password*.yaml
+**/*password*.yml
+**/*token*.yaml
+**/*token*.yml
+**/*credential*.yaml
+**/*credential*.yml
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+*.kubeconfig
+config-vps
+
+# Docker
+# Note: .dockerignore files should be committed (they're not secrets)
+
