@@ -91,8 +91,15 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add k8s/frontend/frontend-deployment.yaml
-        git diff --staged --quiet || git commit -m "chore: update frontend image to ${{ github.sha }}"
-        git push || echo "No changes to push"
+        
+        # Check if there are changes to commit
+        if ! git diff --staged --quiet; then
+          git commit -m "chore: update frontend image to ${{ github.sha }}"
+          git push
+          echo "✅ Manifest updated and pushed to Git"
+        else
+          echo "⚠️ No changes to commit (image tag may already be updated)"
+        fi
 
     - name: Trigger ArgoCD sync (instant deployment)
       if: github.event_name == 'push'
