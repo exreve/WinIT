@@ -22,11 +22,13 @@ This script will:
 The `winit-app.yaml` file configures ArgoCD to:
 - Watch the Git repository: `https://github.com/exreve/WinIT.git`
 - Monitor the `main` branch
-- Watch the `k8s/` directory for Kubernetes manifests
+- Watch the `k8s/` directory for Kubernetes manifests (excluding the `argocd/` subdirectory)
 - Automatically sync changes when detected (auto-sync enabled)
 - Deploy to the `winit` namespace
 - Enable self-healing (automatically corrects drift)
 - Enable pruning (removes resources deleted from Git)
+
+**Note:** The Application manifest (`winit-app.yaml`) should be applied manually using `kubectl apply -f k8s/argocd/winit-app.yaml` after ArgoCD is installed. If ArgoCD later processes this file from the Git repository, it will simply update the existing Application resource (which is safe and idempotent). The `argocd-namespace.yaml` will also be applied, creating the ArgoCD namespace if it doesn't exist.
 
 ## Accessing ArgoCD UI
 

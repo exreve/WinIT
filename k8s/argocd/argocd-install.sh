@@ -17,10 +17,20 @@ kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-repo-server -n argocd || true
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-applicationset-controller -n argocd || true
 
+echo "Waiting for ArgoCD CRDs to be ready..."
+kubectl wait --for=condition=established --timeout=60s crd/applications.argoproj.io || true
+
 echo "ArgoCD installation completed!"
 echo ""
+echo "Waiting a bit more for ArgoCD to be fully operational..."
+sleep 10
+
 echo "Applying ArgoCD Application manifest..."
 kubectl apply -f winit-app.yaml
+
+echo "Waiting for Application to be created..."
+sleep 5
+kubectl get application winit -n argocd || echo "Application may take a moment to appear"
 
 echo ""
 echo "To get the admin password, run:"
