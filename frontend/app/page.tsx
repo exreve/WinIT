@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import MetricsDashboard from './components/MetricsDashboard'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.velinbangkok.com'
 
@@ -167,9 +168,12 @@ export default function Home() {
             )}
           </div>
 
+          {/* Metrics Dashboard */}
+          <MetricsDashboard />
+
           {/* Metrics Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Prometheus Metrics</h2>
+            <h2 className="text-2xl font-semibold mb-4">Prometheus Metrics (Raw)</h2>
             <p className="text-gray-600 mb-4">Test the /metrics endpoint</p>
             <button
               onClick={testMetrics}
@@ -181,7 +185,7 @@ export default function Home() {
             {metricsResult && (
               <div className="mt-4">
                 <h3 className="text-sm font-semibold mb-2">Result:</h3>
-                <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm whitespace-pre-wrap">
+                <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm whitespace-pre-wrap max-h-96">
                   {metricsResult}
                 </pre>
               </div>

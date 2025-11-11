@@ -55,6 +55,99 @@ service_info{version="1.0.0",name="winit-backend"} 1
 `;
 });
 
+// Prometheus query endpoint
+fastify.get('/api/prometheus/query', async (request, reply) => {
+  try {
+    const { query } = request.query as { query?: string };
+    if (!query) {
+      reply.status(400);
+      return { error: 'Query parameter is required' };
+    }
+
+    const prometheusUrl = process.env.PROMETHEUS_URL || 'http://prometheus-operated.monitoring.svc.cluster.local:9090';
+    const url = `${prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    return data;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.status(500);
+    return { error: 'Failed to query Prometheus', message: error instanceof Error ? error.message : 'Unknown error' };
+  }
+});
+
+// Prometheus query range endpoint (for graphs)
+fastify.get('/api/prometheus/query_range', async (request, reply) => {
+  try {
+    const { query, start, end, step } = request.query as { 
+      query?: string;
+      start?: string;
+      end?: string;
+      step?: string;
+    };
+    
+    if (!query) {
+      reply.status(400);
+      return { error: 'Query parameter is required' };
+    }
+
+    const prometheusUrl = process.env.PROMETHEUS_URL || 'http://prometheus-operated.monitoring.svc.cluster.local:9090';
+    const now = Math.floor(Date.now() / 1000);
+    const startTime = start || String(now - 3600); // Default: last hour
+    const endTime = end || String(now);
+    const stepSize = step || '15'; // Default: 15 seconds
+    
+    const url = `${prometheusUrl}/api/v1/query_range?query=${encodeURIComponent(query)}&start=${startTime}&end=${endTime}&step=${stepSize}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    return data;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.status(500);
+    return { error: 'Failed to query Prometheus', message: error instanceof Error ? error.message : 'Unknown error' };
+  }
+});
+
+// Get server metrics summary
+fastify.get('/api/metrics/summary', async (request, reply) => {
+  try {
+    const prometheusUrl = process.env.PROMETHEUS_URL || 'http://prometheus-operated.monitoring.svc.cluster.local:9090';
+    const now = Math.floor(Date.now() / 1000);
+    const startTime = String(now - 3600); // Last hour
+    
+    // Query multiple metrics
+    const queries = [
+      'up{job="backend-service"}',
+      'http_requests_total',
+      'service_info',
+    ];
+    
+    const results: Record<string, any> = {};
+    
+    for (const query of queries) {
+      try {
+        const url = `${prometheusUrl}/api/v1/query_range?query=${encodeURIComponent(query)}&start=${startTime}&end=${now}&step=15`;
+        const response = await fetch(url);
+        const data = await response.json();
+        results[query] = data;
+      } catch (err) {
+        fastify.log.error(`Failed to query ${query}: ${err instanceof Error ? err.message : String(err)}`);
+        results[query] = { error: 'Query failed' };
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.status(500);
+    return { error: 'Failed to fetch metrics summary', message: error instanceof Error ? error.message : 'Unknown error' };
+  }
+});
+
 // Root endpoint
 fastify.get('/', async (request, reply) => {
   return { 

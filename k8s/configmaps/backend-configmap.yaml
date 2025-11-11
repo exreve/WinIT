@@ -9,4 +9,5 @@ data:
   PORT: "3000"
   HOST: "0.0.0.0"
   NODE_ENV: production
+  PROMETHEUS_URL: "http://prometheus-operated.monitoring.svc.cluster.local:9090"
 
