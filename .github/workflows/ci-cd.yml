@@ -52,63 +52,7 @@ jobs:
           cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      - name: Verify cluster connection
-        run: kubectl cluster-info
-
-      - name: Apply Kubernetes manifests
-        run: |
-          # Apply namespace first
-          kubectl apply -f k8s/namespace.yaml
-          
-          # Apply secrets (if they exist)
-          if [ -f k8s/secrets/postgres-secret.yaml ]; then
-            kubectl apply -f k8s/secrets/postgres-secret.yaml
-          fi
-          
-          # Apply configmaps
-          kubectl apply -f k8s/configmaps/
-          
-          # Apply database
-          kubectl apply -f k8s/database/
-          
-          # Apply backend
-          kubectl apply -f k8s/backend/
-          
-          # Apply frontend
-          kubectl apply -f k8s/frontend/
-          
-          # Apply cloudflare
-          kubectl apply -f k8s/cloudflare/
-
-          # Restart deployments to pull new images
-          kubectl rollout restart deployment/backend -n winit || true
-          kubectl rollout restart deployment/frontend -n winit || true
-
-      - name: Wait for rollouts
-        run: |
-          kubectl rollout status deployment/backend -n winit --timeout=5m || true
-          kubectl rollout status deployment/frontend -n winit --timeout=5m || true
-
-      - name: Show deployment status
-        run: |
-          kubectl get pods -n winit
-          kubectl get services -n winit
+  # Deployment is now handled by ArgoCD
+  # ArgoCD watches the Git repository and automatically applies changes
+  # when manifests in the k8s/ directory are updated
 

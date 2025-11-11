@@ -9,7 +9,7 @@ spec:
   project: default
   
   source:
-    repoURL: https://github.com/YOUR_USERNAME/WinIT.git  # Update with your repo
+    repoURL: https://github.com/exreve/WinIT.git
     targetRevision: main
     path: k8s
   
