@@ -52,11 +52,11 @@ export default function Home() {
               </p>
               
               <p>
-                <strong className="text-gray-900">Deployment Environment:</strong> I had a bit of struggle to run Minikube as I'm using QubesOS (very long loading time and constant high CPU usage). So I use a VPS for it.
+                <strong className="text-gray-900">Deployment Environment:</strong> I had a bit of struggle to run Minikube as I&apos;m using QubesOS (very long loading time and constant high CPU usage). So I use a VPS for it.
               </p>
               
               <p>
-                <strong className="text-gray-900">Learning Curve:</strong> That's a lot of new tools, will have a bit of a learning curve so would require more time, trying to play with it to fully understand all the underlying tech, concepts, and commands.
+                <strong className="text-gray-900">Learning Curve:</strong> That&apos;s a lot of new tools, will have a bit of a learning curve so would require more time, trying to play with it to fully understand all the underlying tech, concepts, and commands.
               </p>
               
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
@@ -84,8 +84,8 @@ export default function Home() {
                   <strong className="text-gray-900">Security Notes:</strong>
                 </p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                  <li>I'm aware that both Docker repos are public</li>
-                  <li>Normally .gitignore and .dockerignore are correctly set so we didn't leak any credentials</li>
+                  <li>I&apos;m aware that both Docker repos are public</li>
+                  <li>Normally .gitignore and .dockerignore are correctly set so we didn&apos;t leak any credentials</li>
                 </ul>
               </div>
             </div>
