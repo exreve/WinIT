@@ -42,6 +42,8 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN mkdir -p public && chown -R nextjs:nodejs public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy public folder for static assets (images, etc.)
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
