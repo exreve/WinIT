@@ -9,6 +9,9 @@ spec:
   replicas: 1
   retention: 30d
   serviceAccountName: prometheus
+  # Port configuration (default is 9090)
+  # The Prometheus Operator creates a service with port 9090
+  # To change the port, you would need to create a custom Service
   # Select ServiceMonitors with label app=backend
   serviceMonitorSelector:
     matchLabels:
