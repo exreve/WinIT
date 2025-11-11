@@ -94,3 +94,30 @@ jobs:
         git diff --staged --quiet || git commit -m "chore: update backend image to ${{ github.sha }}"
         git push || echo "No changes to push"
 
+    - name: Trigger ArgoCD sync (instant deployment)
+      if: github.event_name == 'push'
+      run: |
+        # Wait a moment for Git to be updated
+        sleep 2
+        
+        # Try to trigger ArgoCD sync via kubectl if cluster access is available
+        # This requires KUBECONFIG or cluster credentials to be set as secrets
+        if [ -n "${{ secrets.KUBECONFIG }}" ] || [ -n "${{ secrets.KUBE_CONFIG_DATA }}" ]; then
+          echo "Triggering ArgoCD sync..."
+          # Set up kubectl if KUBECONFIG is provided
+          if [ -n "${{ secrets.KUBECONFIG }}" ]; then
+            mkdir -p ~/.kube
+            echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+            chmod 600 ~/.kube/config
+          fi
+          
+          # Trigger ArgoCD refresh and sync
+          kubectl patch application winit -n argocd --type merge -p '{"operation":{"initiatedBy":{"username":"github-actions"},"sync":{"revision":"main"}}}' 2>/dev/null || \
+          kubectl patch application winit -n argocd --type json -p='[{"op": "replace", "path": "/operation", "value": {"initiatedBy":{"username":"github-actions"},"sync":{"revision":"main"}}}]' 2>/dev/null || \
+          echo "Note: ArgoCD will auto-sync within ~3 minutes. To enable instant sync, configure cluster access in GitHub secrets."
+        else
+          echo "Note: ArgoCD will auto-sync within ~3 minutes. To enable instant sync:"
+          echo "  1. Add KUBECONFIG or KUBE_CONFIG_DATA to GitHub secrets"
+          echo "  2. Or configure ArgoCD webhook (see documentation)"
+        fi
+
