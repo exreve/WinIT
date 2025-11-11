@@ -49,6 +49,10 @@ k8s/secrets/*.yaml
 
 # Secret files and credentials
 **/secrets/
+!**/secrets/*.template
+!**/secrets/*.template.yaml
+!**/secrets/*.yaml.template
+!**/secrets/.gitkeep
 **/*secret*.yaml
 **/*secret*.yml
 **/*password*.yaml
