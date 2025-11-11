@@ -72,18 +72,36 @@ cd backend && docker build -t winit-backend:latest . && cd ..
 cd frontend && docker build -t winit-frontend:latest . && cd ..
 ```
 
-### 3. Deploy Kubernetes Resources
+### 3. Configure Database Secrets
+
+**Important:** Before deploying, you need to create the database secret file with your own password:
+
+```bash
+# Copy the template file
+cp k8s/secrets/postgres-secret.yaml.template k8s/secrets/postgres-secret.yaml
+
+# Edit the file and replace YOUR_SECURE_PASSWORD_HERE with your chosen password
+# Make sure both POSTGRES_PASSWORD and DB_PASSWORD use the same value
+nano k8s/secrets/postgres-secret.yaml  # or use your preferred editor
+```
+
+**Generate a secure password:**
+```bash
+openssl rand -base64 32
+```
+
+### 4. Deploy Kubernetes Resources
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/secrets/
+kubectl apply -f k8s/secrets/postgres-secret.yaml
 kubectl apply -f k8s/configmaps/
 kubectl apply -f k8s/database/
 kubectl apply -f k8s/backend/
 kubectl apply -f k8s/frontend/
 ```
 
-### 4. Access the App
+### 5. Access the App
 
 ```bash
 minikube service frontend-service -n winit
