@@ -99,6 +99,53 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Infrastructure & Deployment Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Infrastructure & Deployment</h2>
+            <div className="space-y-4 text-gray-700">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm mb-2">
+                  <strong className="text-gray-900">Service Networking:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>We use <strong>ClusterIP</strong> service type to avoid port collision within the Kubernetes cluster</li>
+                  <li>Services are resolved using local DNS with the format: <code className="bg-gray-200 px-1 rounded">service_name.namespace.svc.cluster.local:port</code></li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <p className="text-sm mb-2">
+                  <strong className="text-gray-900">Cloudflare Tunnel:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>A Cloudflare tunnel service is deployed in Kubernetes</li>
+                  <li>The Cloudflare secret is stored in a <code className="bg-gray-200 px-1 rounded">.yaml</code> file and is <strong>not published</strong> on either GitHub or Docker</li>
+                  <li>The secret is applied manually to the cluster</li>
+                  <li>In Cloudflare configuration, we use local DNS domain names (e.g., <code className="bg-gray-200 px-1 rounded">service_name.namespace.svc.cluster.local:port</code>) to resolve the application&apos;s IP addresses</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <p className="text-sm mb-2">
+                  <strong className="text-gray-900">CI/CD Pipeline:</strong>
+                </p>
+                <p className="text-sm mb-3">
+                  There was some initial confusion because we were asked to set up <strong>ArgoCD</strong> in the cluster, but later the bonus task requested a full GitHub Actions workflow that builds, publishes, and applies changes via <code className="bg-gray-200 px-1 rounded">kubectl apply</code>. This could result in applying changes twice if ArgoCD and GitHub Actions both try to apply the same changes simultaneously.
+                </p>
+                <p className="text-sm mb-2">
+                  <strong className="text-gray-900">Intended Workflow:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><strong>GitHub Actions:</strong> Builds and publishes Docker images to the registry</li>
+                  <li><strong>ArgoCD:</strong> Watches the Git repository and automatically applies <code className="bg-gray-200 px-1 rounded">.yaml</code> changes when detected</li>
+                </ul>
+                <p className="text-sm mt-3 italic text-gray-600">
+                  This separation ensures that GitHub Actions handles the build/publish phase, while ArgoCD handles the deployment phase, avoiding conflicts and duplicate applications.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Health Check Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Health Check</h2>
