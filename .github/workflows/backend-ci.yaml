@@ -78,10 +78,12 @@ jobs:
         SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
         IMAGE_TAG="${{ github.ref_name }}-${SHORT_SHA}"
         
-        # Update the image in the deployment
-        sed -i "s|YOUR_REGISTRY/winit-backend:.*|${{ secrets.DOCKER_USERNAME }}/winit-backend:${IMAGE_TAG}|g" k8s/backend/backend-deployment.yaml
+        # Update the image in the deployment (match any existing image tag)
+        sed -i "s|exreve/winit-backend:.*|${{ secrets.DOCKER_USERNAME }}/winit-backend:${IMAGE_TAG}|g" k8s/backend/backend-deployment.yaml
         
         echo "Updated image to: ${{ secrets.DOCKER_USERNAME }}/winit-backend:${IMAGE_TAG}"
+        echo "Current deployment file content:"
+        grep "image:" k8s/backend/backend-deployment.yaml
 
     - name: Commit and push updated manifests
       if: github.event_name == 'push'
