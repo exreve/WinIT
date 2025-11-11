@@ -60,7 +60,7 @@ export default function Home() {
               </p>
               
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm">
+                <p className="text-sm mb-3">
                   <strong className="text-gray-900">GitHub Repository:</strong>{' '}
                   <a 
                     href="https://github.com/exreve/WinIT" 
@@ -71,6 +71,14 @@ export default function Home() {
                     https://github.com/exreve/WinIT
                   </a>
                 </p>
+                <div className="mt-3">
+                  <p className="text-sm font-semibold text-gray-900 mb-2">GitHub Actions Proof:</p>
+                  <img 
+                    src="/github_actions.png" 
+                    alt="GitHub Actions workflow success" 
+                    className="w-full max-w-2xl rounded-lg shadow-md border border-gray-200"
+                  />
+                </div>
               </div>
               
               <div className="mt-4 p-4 bg-green-50 rounded-lg">
