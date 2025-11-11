@@ -43,6 +43,54 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8 text-center">WinIT Backend Tester</h1>
         
         <div className="space-y-6">
+          {/* Project Status Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Project Status</h2>
+            <div className="space-y-4 text-gray-700">
+              <p>
+                <strong className="text-gray-900">Implementation Status:</strong> Normally everything is implemented as requested.
+              </p>
+              
+              <p>
+                <strong className="text-gray-900">Deployment Environment:</strong> I had a bit of struggle to run Minikube as I'm using QubesOS (very long loading time and constant high CPU usage). So I use a VPS for it.
+              </p>
+              
+              <p>
+                <strong className="text-gray-900">Learning Curve:</strong> That's a lot of new tools, will have a bit of a learning curve so would require more time, trying to play with it to fully understand all the underlying tech, concepts, and commands.
+              </p>
+              
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm">
+                  <strong className="text-gray-900">GitHub Repository:</strong>{' '}
+                  <a 
+                    href="https://github.com/exreve/WinIT" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    https://github.com/exreve/WinIT
+                  </a>
+                </p>
+              </div>
+              
+              <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                <p className="text-sm">
+                  <strong className="text-gray-900">Access:</strong> The frontend and backend are served through Cloudflare tunnel to the VPS.
+                </p>
+              </div>
+              
+              <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                <p className="text-sm">
+                  <strong className="text-gray-900">Security Notes:</strong>
+                </p>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                  <li>I'm aware that both Docker repos are public</li>
+                  <li>Normally .gitignore and .dockerignore are correctly set so we didn't leak any credentials</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Health Check Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Health Check</h2>
