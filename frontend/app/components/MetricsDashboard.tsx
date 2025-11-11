@@ -17,6 +17,9 @@ export default function MetricsDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [httpRequestsData, setHttpRequestsData] = useState<MetricDataPoint[]>([])
   const [serviceUpData, setServiceUpData] = useState<MetricDataPoint[]>([])
+  const [memoryUsageData, setMemoryUsageData] = useState<MetricDataPoint[]>([])
+  const [cpuUsageData, setCpuUsageData] = useState<MetricDataPoint[]>([])
+  const [podCountData, setPodCountData] = useState<MetricDataPoint[]>([])
   const [timeRange, setTimeRange] = useState('1h')
 
   const fetchMetrics = useCallback(async () => {
@@ -79,6 +82,108 @@ export default function MetricsDashboard() {
       } catch (err) {
         console.warn('Failed to fetch service status:', err)
         setServiceUpData([])
+      }
+
+      // Fetch cluster memory usage (something that moves a lot)
+      try {
+        // Try container_memory_usage_bytes (from cAdvisor) or node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+        const memoryQueries = [
+          'sum(container_memory_usage_bytes{container!="POD",container!=""}) / 1024 / 1024 / 1024', // GB
+          'sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024', // GB
+        ]
+        
+        for (const query of memoryQueries) {
+          try {
+            const memResponse = await fetch(
+              `${API_URL}/api/prometheus/query_range?query=${encodeURIComponent(query)}&start=${startTime}&end=${now}&step=30`
+            )
+            const memData = await memResponse.json()
+            
+            if (memData.status === 'success' && memData.data?.result?.[0]?.values) {
+              const formatted = memData.data.result[0].values.map(([timestamp, value]: [string, string]) => ({
+                timestamp: parseInt(timestamp) * 1000,
+                value: parseFloat(value) || 0,
+                time: new Date(parseInt(timestamp) * 1000).toLocaleTimeString()
+              }))
+              setMemoryUsageData(formatted)
+              break // Use first successful query
+            }
+          } catch (err) {
+            console.warn(`Memory query failed: ${query}`, err)
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch memory metrics:', err)
+        setMemoryUsageData([])
+      }
+
+      // Fetch CPU usage
+      try {
+        const cpuQueries = [
+          'sum(rate(container_cpu_usage_seconds_total{container!="POD",container!=""}[1m])) * 100', // Percentage
+          'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m])) / sum(rate(node_cpu_seconds_total[1m])) * 100', // Percentage
+        ]
+        
+        for (const query of cpuQueries) {
+          try {
+            const cpuResponse = await fetch(
+              `${API_URL}/api/prometheus/query_range?query=${encodeURIComponent(query)}&start=${startTime}&end=${now}&step=30`
+            )
+            const cpuData = await cpuResponse.json()
+            
+            if (cpuData.status === 'success' && cpuData.data?.result?.[0]?.values) {
+              const formatted = cpuData.data.result[0].values.map(([timestamp, value]: [string, string]) => ({
+                timestamp: parseInt(timestamp) * 1000,
+                value: parseFloat(value) || 0,
+                time: new Date(parseInt(timestamp) * 1000).toLocaleTimeString()
+              }))
+              setCpuUsageData(formatted)
+              break
+            }
+          } catch (err) {
+            console.warn(`CPU query failed: ${query}`, err)
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch CPU metrics:', err)
+        setCpuUsageData([])
+      }
+
+      // Fetch pod count (something that changes)
+      try {
+        const podQuery = 'count(kube_pod_info)'
+        const podResponse = await fetch(
+          `${API_URL}/api/prometheus/query_range?query=${encodeURIComponent(podQuery)}&start=${startTime}&end=${now}&step=30`
+        )
+        const podData = await podResponse.json()
+        
+        if (podData.status === 'success' && podData.data?.result?.[0]?.values) {
+          const formatted = podData.data.result[0].values.map(([timestamp, value]: [string, string]) => ({
+            timestamp: parseInt(timestamp) * 1000,
+            value: parseFloat(value) || 0,
+            time: new Date(parseInt(timestamp) * 1000).toLocaleTimeString()
+          }))
+          setPodCountData(formatted)
+        } else {
+          // Fallback: try container count
+          const containerQuery = 'count(container_start_time_seconds{container!="POD",container!=""})'
+          const containerResponse = await fetch(
+            `${API_URL}/api/prometheus/query_range?query=${encodeURIComponent(containerQuery)}&start=${startTime}&end=${now}&step=30`
+          )
+          const containerData = await containerResponse.json()
+          
+          if (containerData.status === 'success' && containerData.data?.result?.[0]?.values) {
+            const formatted = containerData.data.result[0].values.map(([timestamp, value]: [string, string]) => ({
+              timestamp: parseInt(timestamp) * 1000,
+              value: parseFloat(value) || 0,
+              time: new Date(parseInt(timestamp) * 1000).toLocaleTimeString()
+            }))
+            setPodCountData(formatted)
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch pod count:', err)
+        setPodCountData([])
       }
 
     } catch (err) {
@@ -236,7 +341,130 @@ export default function MetricsDashboard() {
           </div>
         )}
 
-        {httpRequestsData.length === 0 && serviceUpData.length === 0 && !loading && (
+        {/* Memory Usage */}
+        {memoryUsageData.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Cluster Memory Usage (GB)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={memoryUsageData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="time" 
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  labelFormatter={(value: unknown) => {
+                    if (typeof value === 'number') {
+                      return new Date(value).toLocaleString()
+                    }
+                    return String(value)
+                  }}
+                  formatter={(value: unknown) => {
+                    const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0
+                    return [numValue.toFixed(2), 'GB']
+                  }}
+                />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#ff7300" 
+                  fill="#ff7300" 
+                  fillOpacity={0.6}
+                  name="Memory (GB)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* CPU Usage */}
+        {cpuUsageData.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Cluster CPU Usage (%)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={cpuUsageData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="time" 
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  domain={[0, 100]}
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip 
+                  labelFormatter={(value: unknown) => {
+                    if (typeof value === 'number') {
+                      return new Date(value).toLocaleString()
+                    }
+                    return String(value)
+                  }}
+                  formatter={(value: unknown) => {
+                    const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0
+                    return [numValue.toFixed(2), '%']
+                  }}
+                />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#00ff00" 
+                  fill="#00ff00" 
+                  fillOpacity={0.6}
+                  name="CPU (%)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Pod Count */}
+        {podCountData.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Running Pods Count</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={podCountData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="time" 
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  domain={['dataMin - 1', 'dataMax + 1']}
+                />
+                <Tooltip 
+                  labelFormatter={(value: unknown) => {
+                    if (typeof value === 'number') {
+                      return new Date(value).toLocaleString()
+                    }
+                    return String(value)
+                  }}
+                  formatter={(value: unknown) => {
+                    const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0
+                    return [Math.round(numValue), 'pods']
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#0088fe" 
+                  strokeWidth={2}
+                  dot={false}
+                  name="Pods"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {httpRequestsData.length === 0 && serviceUpData.length === 0 && memoryUsageData.length === 0 && cpuUsageData.length === 0 && podCountData.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
             <p className="mb-2">No metrics data available.</p>
             <p className="text-sm">This could mean:</p>
